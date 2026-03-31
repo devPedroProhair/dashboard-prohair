@@ -1,0 +1,24 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  background-color: #f3f4f6;
+}
+
+/* No seu arquivo CSS */
+input[type="date"] {
+    accent-color: #FFCC00; /* O amarelo da Prohair */
+    background-color: #1a1a1a; /* Fundo escuro para combinar */
+    color: white;
+    border: 1px solid #FFCC00;
+    padding: 5px;
+    border-radius: 5px;
+}
+
+/* Isso altera especificamente o ícone do calendário */
+input[type="date"]::-webkit-calendar-picker-indicator {
+    cursor: pointer;
+    /* Esse filtro transforma o ícone preto em amarelo/dourado */
+    filter: invert(80%) sepia(100%) saturate(500%) hue-rotate(10deg);
+}
