@@ -383,7 +383,14 @@ function ErrorScreen({ onRetry }) {
 }
 
 // ─── APP PRINCIPAL ────────────────────────────────────────────────────────
-export default function App() {
+  export default function App() {
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 1024);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 1024);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
   const [logado,      setLogado]      = useState(false);
   const [periodo,     setPeriodo]     = useState('Este Mês');
   const [dados,       setDados]       = useState(null);
@@ -485,51 +492,73 @@ export default function App() {
     <div style={{
       minHeight:   '100vh',
       display:     'flex',
+      flexDirection: isMobile ? 'column' : 'row', // EMPILHA NO CELULAR
       background:  SURFACE,
       fontFamily:  "'Inter', -apple-system, BlinkMacSystemFont, sans-serif",
       color:       TEXT_PRI,
     }}>
 
       {/* ── SIDEBAR ── */}
-      <aside style={{ width: 220, background: CARD, borderRight: `1px solid ${BORDER}`, display: 'flex', flexDirection: 'column', padding: '24px 0', flexShrink: 0 }}>
-        {/* Logo da Empresa */}
-        <div style={{ padding: '0 60px 20px', display: 'flex', alignItems: 'center', gap: 10 }}>
+      <aside style={{ 
+        width: isMobile ? '100%' : 220, 
+        background: CARD, 
+        borderRight: isMobile ? 'none' : `1px solid ${BORDER}`,
+        borderBottom: isMobile ? `1px solid ${BORDER}` : 'none', 
+        display: 'flex', 
+        flexDirection: isMobile ? 'row' : 'column', // Lado a lado no celular
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        padding: isMobile ? '12px 20px' : '24px 0', 
+        flexShrink: 0 
+      }}>
+        {/* Logo ajustada */}
+        <div style={{ padding: isMobile ? '0' : '0 60px 20px' }}>
           <img 
             src="/logo-prohair.png" 
             alt="Prohair Logo" 
             style={{ 
-              width: 100, 
-              height: 100, 
-              objectFit: 'contain' // Garante que a logo não fique esticada
+              width: isMobile ? 60 : 100, 
+              height: isMobile ? 40 : 100, 
+              objectFit: 'contain' 
             }} 
           />
         </div>
 
-        <div style={{ padding: '0 12px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', borderRadius: 10, background: ACCENT + '18', borderLeft: `3px solid ${ACCENT}`, color: ACCENT, fontWeight: 600, fontSize: 13 }}>
-            <LayoutDashboard size={16} />
-            <span>Painel de Metas</span>
+        {/* Menu de texto: Escondemos no celular para não amontoar */}
+        {!isMobile && (
+          <div style={{ padding: '0 12px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', borderRadius: 10, background: ACCENT + '18', borderLeft: `3px solid ${ACCENT}`, color: ACCENT, fontWeight: 600, fontSize: 13 }}>
+              <LayoutDashboard size={16} />
+              <span>Painel de Metas</span>
+            </div>
           </div>
-        </div>
+        )}
 
-        <div style={{ margin: '24px 20px', borderTop: `1px solid ${BORDER}` }} />
+        {/* Divisor: Escondemos no celular */}
+        {!isMobile && <div style={{ margin: '24px 20px', borderTop: `1px solid ${BORDER}` }} />}
 
-        <div style={{ padding: '0 20px' }}>
-          <p style={{ margin: '0 0 6px', fontSize: 10, color: TEXT_MUT, textTransform: 'uppercase', letterSpacing: '0.07em' }}>
-            Performance Geral
+        {/* Bloco de Performance: Compacto no celular */}
+        <div style={{ padding: isMobile ? '0' : '0 20px', textAlign: isMobile ? 'right' : 'left' }}>
+          <p style={{ margin: 0, fontSize: 10, color: TEXT_MUT, textTransform: 'uppercase', letterSpacing: '0.07em' }}>
+            {isMobile ? 'Perf.' : 'Performance Geral'}
           </p>
+          
           {metaZerada ? (
-            <p style={{ margin: '0 0 8px', fontSize: 13, fontWeight: 600, color: AMBER }}>
-              Multi-mês selecionado
+            <p style={{ margin: 0, fontSize: isMobile ? 12 : 13, fontWeight: 600, color: AMBER }}>
+              {isMobile ? 'Multi-mês' : 'Multi-mês selecionado'}
             </p>
           ) : (
-            <>
-              <p style={{ margin: '0 0 8px', fontSize: 22, fontWeight: 800, color: TEXT_PRI }}>
+            <div style={{ display: isMobile ? 'block' : 'contents' }}>
+              <p style={{ margin: 0, fontSize: isMobile ? 18 : 22, fontWeight: 800, color: TEXT_PRI }}>
                 {pct.toFixed(1)}%
               </p>
-              <ProgressBar pct={pct} color={ACCENT} />
-              <p style={{ margin: '6px 0 0', fontSize: 11, color: TEXT_MUT }}>da meta mensal</p>
-            </>
+              {!isMobile && (
+                <>
+                  <ProgressBar pct={pct} color={ACCENT} />
+                  <p style={{ margin: '6px 0 0', fontSize: 11, color: TEXT_MUT }}>da meta mensal</p>
+                </>
+              )}
+            </div>
           )}
         </div>
       </aside>
@@ -538,7 +567,14 @@ export default function App() {
       <main style={{ flex: 1, padding: '32px 36px', overflowY: 'auto' }}>
 
         {/* HEADER */}
-        <header style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 36 }}>
+        <header style={{ 
+          display: 'flex', 
+          flexDirection: isMobile ? 'column' : 'row', 
+          gap: isMobile ? 20 : 0,
+          alignItems: isMobile ? 'flex-start' : 'center', 
+          justifyContent: 'space-between', 
+          marginBottom: 36 
+        }}>
           <div>
             <h1 style={{ margin: 0, fontSize: 24, fontWeight: 800, letterSpacing: '-0.02em' }}>Painel Comercial</h1>
             <p style={{ margin: '4px 0 0', fontSize: 12, color: TEXT_MUT, letterSpacing: '0.07em', textTransform: 'uppercase' }}>
@@ -630,7 +666,12 @@ export default function App() {
         {metaZerada && <MetasZeradasAlert />}
 
         {/* ── KPI CARDS ── */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16, marginBottom: 28 }}>
+        <div style={{ 
+          display: 'grid', 
+          gridTemplateColumns: isMobile ? '1fr' : 'repeat(4, 1fr)', // 1 COLUNA NO CELULAR
+          gap: 16, 
+          marginBottom: 28 
+        }}>
           <KpiCard
             icon={DollarSign}
             label="Realizado Geral"
@@ -665,7 +706,12 @@ export default function App() {
         </div>
 
         {/* ── GRÁFICOS ── */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 0.7fr', gap: 18, marginBottom: 28 }}>
+        <div style={{ 
+          display: 'grid', 
+          gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr 0.7fr', // Empilha os 3 gráficos no celular
+          gap: 18, 
+          marginBottom: 28 
+        }}>
 
           {/* Barras: Performance Individual */}
           <div style={{ background: CARD, border: `1px solid ${BORDER}`, borderRadius: 16, padding: '24px 20px' }}>
@@ -764,13 +810,21 @@ export default function App() {
         </div>
 
         {/* ── RANKING ELITE ── */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 18 }}>
+        <div style={{ 
+          display: 'grid', 
+          gridTemplateColumns: isMobile ? '1fr 1fr' : 'repeat(5, 1fr)', // 2 POR LINHA NO CELULAR
+          gap: 14 
+        }}>
           <div style={{ width: 4, height: 22, borderRadius: 2, background: ACCENT }} />
           <h2 style={{ margin: 0, fontSize: 16, fontWeight: 800 }}>Ranking Elite</h2>
           <span style={{ fontSize: 11, color: TEXT_MUT, fontWeight: 500 }}>— Top vendedoras do período</span>
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 14 }}>
+        <div style={{ 
+          display: 'grid', 
+          gridTemplateColumns: isMobile ? '1fr' : 'repeat(5, 1fr)', // Uma vendedora por linha no celular
+          gap: 14 
+        }}>
           {dados.ranking.map((v, i) => (
             <VendedoraCard key={i} v={v} index={i} metaZerada={metaZerada} />
           ))}
