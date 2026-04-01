@@ -41,6 +41,7 @@ def login(dados: LoginRequest):
 # ─── CONFIGURAÇÕES ────────────────────────────────────────────────────────────
 # Abas de vendas — chave no formato "MM/YYYY"
 TABELAS_GIDS = {
+    "04/2026": "1639507081",
     "03/2026": "440786248",
     "02/2026": "336354424",
     "01/2026": "437005109",
