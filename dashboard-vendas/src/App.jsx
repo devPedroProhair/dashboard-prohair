@@ -498,70 +498,49 @@ function ErrorScreen({ onRetry }) {
       color:       TEXT_PRI,
     }}>
 
-      {/* ── SIDEBAR ── */}
-      <aside style={{ 
-        width: isMobile ? '100%' : 220, 
-        background: CARD, 
-        borderRight: isMobile ? 'none' : `1px solid ${BORDER}`,
-        borderBottom: isMobile ? `1px solid ${BORDER}` : 'none', 
-        display: 'flex', 
-        flexDirection: isMobile ? 'row' : 'column', // Lado a lado no celular
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        padding: isMobile ? '12px 20px' : '24px 0', 
-        flexShrink: 0 
-      }}>
-        {/* Logo ajustada */}
-        <div style={{ padding: isMobile ? '0' : '0 60px 20px' }}>
-          <img 
-            src="/logo-prohair.png" 
-            alt="Prohair Logo" 
-            style={{ 
-              width: isMobile ? 60 : 100, 
-              height: isMobile ? 40 : 100, 
-              objectFit: 'contain' 
-            }} 
-          />
-        </div>
+{/* ── SIDEBAR RESPONSIVA AJUSTADA ── */}
+<aside style={{ 
+  width: isMobile ? '100%' : 220, 
+  background: CARD, 
+  borderRight: isMobile ? 'none' : `1px solid ${BORDER}`,
+  borderBottom: isMobile ? `1px solid ${BORDER}` : 'none', 
+  display: 'flex', 
+  flexDirection: isMobile ? 'row' : 'column', 
+  justifyContent: isMobile ? 'space-between' : 'flex-start', // Agrupa no topo no PC
+  alignItems: isMobile ? 'center' : 'stretch', 
+  padding: isMobile ? '12px 20px' : '32px 0', 
+  flexShrink: 0 
+}}>
+  {/* 1. LOGO */}
+  <div style={{ padding: isMobile ? '0' : '0 24px 32px', textAlign: isMobile ? 'left' : 'center' }}>
+    <img src="/logo-prohair.png" alt="Prohair Logo" style={{ width: isMobile ? 60 : 120, height: 'auto', objectFit: 'contain' }} />
+  </div>
 
-        {/* Menu de texto: Escondemos no celular para não amontoar */}
-        {!isMobile && (
-          <div style={{ padding: '0 12px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', borderRadius: 10, background: ACCENT + '18', borderLeft: `3px solid ${ACCENT}`, color: ACCENT, fontWeight: 600, fontSize: 13 }}>
-              <LayoutDashboard size={16} />
-              <span>Painel de Metas</span>
-            </div>
-          </div>
-        )}
+  {/* 2. MENU (Desktop) */}
+  {!isMobile && (
+    <div style={{ padding: '0 16px', marginBottom: 20 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px', borderRadius: 12, background: ACCENT + '18', borderLeft: `4px solid ${ACCENT}`, color: ACCENT, fontWeight: 700, fontSize: 13 }}>
+        <LayoutDashboard size={18} />
+        <span>Painel de Metas</span>
+      </div>
+    </div>
+  )}
 
-        {/* Divisor: Escondemos no celular */}
-        {!isMobile && <div style={{ margin: '24px 20px', borderTop: `1px solid ${BORDER}` }} />}
-
-        {/* Bloco de Performance: Compacto no celular */}
-        <div style={{ padding: isMobile ? '0' : '0 20px', textAlign: isMobile ? 'right' : 'left' }}>
-          <p style={{ margin: 0, fontSize: 10, color: TEXT_MUT, textTransform: 'uppercase', letterSpacing: '0.07em' }}>
-            {isMobile ? 'Perf.' : 'Performance Geral'}
-          </p>
-          
-          {metaZerada ? (
-            <p style={{ margin: 0, fontSize: isMobile ? 12 : 13, fontWeight: 600, color: AMBER }}>
-              {isMobile ? 'Multi-mês' : 'Multi-mês selecionado'}
-            </p>
-          ) : (
-            <div style={{ display: isMobile ? 'block' : 'contents' }}>
-              <p style={{ margin: 0, fontSize: isMobile ? 18 : 22, fontWeight: 800, color: TEXT_PRI }}>
-                {pct.toFixed(1)}%
-              </p>
-              {!isMobile && (
-                <>
-                  <ProgressBar pct={pct} color={ACCENT} />
-                  <p style={{ margin: '6px 0 0', fontSize: 11, color: TEXT_MUT }}>da meta mensal</p>
-                </>
-              )}
-            </div>
-          )}
-        </div>
-      </aside>
+  {/* 3. PERFORMANCE (Agora logo abaixo do menu) */}
+  <div style={{ 
+    padding: isMobile ? '0' : '0 24px', 
+    marginTop: isMobile ? 0 : 20, // TROCAMOS 'AUTO' POR 20
+    textAlign: isMobile ? 'right' : 'left' 
+  }}>
+    <p style={{ margin: 0, fontSize: 10, color: TEXT_MUT, textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+      {isMobile ? 'Perf.' : 'Performance Geral'}
+    </p>
+    <p style={{ margin: 0, fontSize: isMobile ? 18 : 26, fontWeight: 800, color: TEXT_PRI }}>
+      {pct.toFixed(1)}%
+    </p>
+    {!isMobile && <ProgressBar pct={pct} color={ACCENT} />}
+  </div>
+</aside>
 
       {/* ── CONTEÚDO ── */}
       <main style={{ flex: 1, padding: '32px 36px', overflowY: 'auto' }}>
