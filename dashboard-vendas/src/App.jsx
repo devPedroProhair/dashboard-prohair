@@ -790,13 +790,21 @@ function ErrorScreen({ onRetry }) {
 
         {/* ── RANKING ELITE ── */}
         <div style={{ 
-          display: 'grid', 
-          gridTemplateColumns: isMobile ? '1fr 1fr' : 'repeat(5, 1fr)', // 2 POR LINHA NO CELULAR
-          gap: 14 
+          display: 'flex', 
+          alignItems: 'center', 
+          gap: 10, 
+          marginBottom: 18,
+          marginTop: 32 // Espaço extra acima do ranking
         }}>
           <div style={{ width: 4, height: 22, borderRadius: 2, background: ACCENT }} />
           <h2 style={{ margin: 0, fontSize: 16, fontWeight: 800 }}>Ranking Elite</h2>
-          <span style={{ fontSize: 11, color: TEXT_MUT, fontWeight: 500 }}>— Top vendedoras do período</span>
+          
+          {/* Oculta o subtítulo no mobile para não apertar o título */}
+          {!isMobile && (
+            <span style={{ fontSize: 11, color: TEXT_MUT, fontWeight: 500 }}>
+              — Top vendedoras do período
+            </span>
+          )}
         </div>
 
         <div style={{ 
