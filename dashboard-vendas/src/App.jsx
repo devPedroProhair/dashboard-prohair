@@ -695,38 +695,37 @@ function ErrorScreen({ onRetry }) {
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 18 }}>
             <div style={{ width: 4, height: 22, borderRadius: 2, background: EMERALD }} />
             <h2 style={{ margin: 0, fontSize: 16, fontWeight: 800 }}>Performance Wati</h2>
-            <span style={{ fontSize: 11, color: TEXT_MUT, fontWeight: 500 }}>— Aquisição e ROI</span>
           </div>
 
-          <div style={{ 
-            display: 'grid', 
-            gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)', 
-            gap: 16 
-          }}>
-            <KpiCard
-              icon={Zap}
-              label="Investimento Wati"
-              value={fmt(totalGastoWati)}
-              sub={`${campanhas.length} campanhas disparadas`}
-              accent={EMERALD}
-            />
-            <KpiCard
-              icon={TrendingUp}
-              label="Vendas via Wati"
-              value={fmt(totalVendasWati)}
-              sub={`Representa ${((totalVendasWati / dados.faturamento_geral) * 100).toFixed(1)}% do total`}
-              accent={ACCENT}
-            />
-            <KpiCard
-              icon={Trophy}
-              label="ROAS (Marketing)"
-              value={`${roasMedio.toFixed(2)}x`}
-              sub="Retorno sobre investimento"
-              accent={AMBER}
-              trend={roasMedio > 4 ? "Alto" : "Normal"}
-              trendUp={roasMedio > 4}
-            />
-          </div>
+          {/* Se o filtro for multi-mês, mostramos o alerta em vez dos cards zerados */}
+          {metaZerada ? (
+            <div style={{ 
+              background: AMBER + '10', 
+              border: `1px solid ${AMBER}30`, 
+              padding: '20px', 
+              borderRadius: 16, 
+              display: 'flex', 
+              alignItems: 'center', 
+              gap: 12 
+            }}>
+              <Info size={20} color={AMBER} />
+              <span style={{ fontSize: 13, color: TEXT_SEC }}>
+                Os dados de Marketing são isolados por mês. 
+                <strong style={{ color: AMBER, marginLeft: 5 }}>Selecione um único mês</strong> para visualizar o investimento e ROI.
+              </span>
+            </div>
+          ) : (
+            /* Caso contrário, mostra os cards normalmente */
+            <div style={{ 
+              display: 'grid', 
+              gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)', 
+              gap: 16 
+            }}>
+              <KpiCard icon={Zap} label="Investimento Wati" value={fmt(totalGastoWati)} accent={EMERALD} />
+              <KpiCard icon={TrendingUp} label="Vendas via Wati" value={fmt(totalVendasWati)} accent={ACCENT} />
+              <KpiCard icon={Trophy} label="ROAS (Marketing)" value={`${roasMedio.toFixed(2)}x`} accent={AMBER} />
+            </div>
+          )}
         </div>
 
       <div style={{ 
