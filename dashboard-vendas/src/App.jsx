@@ -468,6 +468,12 @@ function ErrorScreen({ onRetry }) {
     ? (dados.faturamento_geral / dados.meta_empresa) * 100
     : 0;
 
+  // Abaixo de const pct = ...
+  const campanhas = dados.campanhas_wati ?? [];
+  const totalGastoWati = campanhas.reduce((acc, curr) => acc + (Number(curr.gasto) || 0), 0);
+  const totalVendasWati = campanhas.reduce((acc, curr) => acc + (Number(curr.vendas) || 0), 0);
+  const roasMedio = totalGastoWati > 0 ? (totalVendasWati / totalGastoWati) : 0;
+
   const dadosGap = dados.ranking
     .map((v, i) => ({
       name:  firstName(v.nome),
@@ -684,6 +690,63 @@ function ErrorScreen({ onRetry }) {
           />
         </div>
 
+        {/* ── SEÇÃO DE MARKETING (WATI) ── */}
+        <div style={{ marginBottom: 32 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 18 }}>
+            <div style={{ width: 4, height: 22, borderRadius: 2, background: EMERALD }} />
+            <h2 style={{ margin: 0, fontSize: 16, fontWeight: 800 }}>Performance Wati</h2>
+            <span style={{ fontSize: 11, color: TEXT_MUT, fontWeight: 500 }}>— Aquisição e ROI</span>
+          </div>
+
+          <div style={{ 
+            display: 'grid', 
+            gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)', 
+            gap: 16 
+          }}>
+            <KpiCard
+              icon={Zap}
+              label="Investimento Wati"
+              value={fmt(totalGastoWati)}
+              sub={`${campanhas.length} campanhas disparadas`}
+              accent={EMERALD}
+            />
+            <KpiCard
+              icon={TrendingUp}
+              label="Vendas via Wati"
+              value={fmt(totalVendasWati)}
+              sub={`Representa ${((totalVendasWati / dados.faturamento_geral) * 100).toFixed(1)}% do total`}
+              accent={ACCENT}
+            />
+            <KpiCard
+              icon={Trophy}
+              label="ROAS (Marketing)"
+              value={`${roasMedio.toFixed(2)}x`}
+              sub="Retorno sobre investimento"
+              accent={AMBER}
+              trend={roasMedio > 4 ? "Alto" : "Normal"}
+              trendUp={roasMedio > 4}
+            />
+          </div>
+        </div>
+
+      <div style={{ 
+          display: 'flex', 
+          alignItems: 'center', 
+          gap: 10, 
+          marginBottom: 18,
+          marginTop: 32 // Espaço extra acima do ranking
+        }}>
+          <div style={{ width: 4, height: 22, borderRadius: 2, background: ACCENT }} />
+          <h2 style={{ margin: 0, fontSize: 16, fontWeight: 800 }}>Ranking Elite</h2>
+          
+          {/* Oculta o subtítulo no mobile para não apertar o título */}
+          {!isMobile && (
+            <span style={{ fontSize: 11, color: TEXT_MUT, fontWeight: 500 }}>
+              — Top vendedoras do período
+            </span>
+          )}
+      </div>
+
         {/* ── GRÁFICOS ── */}
         <div style={{ 
           display: 'grid', 
@@ -789,23 +852,6 @@ function ErrorScreen({ onRetry }) {
         </div>
 
         {/* ── RANKING ELITE ── */}
-        <div style={{ 
-          display: 'flex', 
-          alignItems: 'center', 
-          gap: 10, 
-          marginBottom: 18,
-          marginTop: 32 // Espaço extra acima do ranking
-        }}>
-          <div style={{ width: 4, height: 22, borderRadius: 2, background: ACCENT }} />
-          <h2 style={{ margin: 0, fontSize: 16, fontWeight: 800 }}>Ranking Elite</h2>
-          
-          {/* Oculta o subtítulo no mobile para não apertar o título */}
-          {!isMobile && (
-            <span style={{ fontSize: 11, color: TEXT_MUT, fontWeight: 500 }}>
-              — Top vendedoras do período
-            </span>
-          )}
-        </div>
 
         <div style={{ 
           display: 'grid', 

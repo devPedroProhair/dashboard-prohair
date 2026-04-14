@@ -48,6 +48,12 @@ TABELAS_GIDS = {
     "12/2025": "694628997",
 }
 
+WATI_GIDS = {
+    "04/2026": "1818842645", # Aba ABRIL
+    "03/2026": "0", # Pegue o GID da aba MARÇO na URL
+    # Adicione os próximos meses conforme criar as abas
+}
+
 # ──────────────────────────────────────────────────────────────────────────────
 # ABA DE METAS FIXAS
 # A supervisora gerencia esta aba na mesma planilha.
@@ -64,6 +70,10 @@ GID_METAS = os.getenv("GID_METAS")
 ID_PLANILHA = os.getenv("ID_PLANILHA")
 
 ID_METAS = os.getenv("ID_METAS")
+
+GID_WATI = os.getenv("GID_WATI")
+
+ID_WATI = os.getenv("ID_WATI")
 
 # Lista de vendedoras ativas (apenas para garantir a ordem do ranking)
 VENDEDORAS = ["Maria Clara", "Livia", "Jenifer", "Stephany", "Marina"]
@@ -285,6 +295,61 @@ def calcular_historico_semana(
         })
     return resultado
 
+def carregar_dados_wati(dt_inicio: datetime, dt_fim: datetime):
+    if not ID_WATI: return []
+    
+    # Descobre quais meses o período abrange (ex: "04/2026")
+    meses_necessarios = []
+    atual = dt_inicio.replace(day=1)
+    while atual <= dt_fim:
+        meses_necessarios.append(atual.strftime("%m/%Y"))
+        proximo_mes = atual.month % 12 + 1
+        proximo_ano = atual.year + (atual.month // 12)
+        atual = atual.replace(month=proximo_mes, year=proximo_ano)
+
+    dfs = []
+    for mes_ano in meses_necessarios:
+        gid = WATI_GIDS.get(mes_ano)
+        if gid:
+            url = f"https://docs.google.com/spreadsheets/d/{ID_WATI}/export?format=csv&gid={gid}"
+            try:
+                # LER SEM SKIPROWS para não pular a linha 2
+                temp_df = pd.read_csv(url) 
+                dfs.append(temp_df)
+            except Exception as e:
+                print(f"⚠️ Aba Wati {mes_ano} não encontrada ou erro: {e}")
+
+    if not dfs: return []
+    
+
+    df_full = pd.concat(dfs, ignore_index=True).fillna(0) # Mata o erro NaN aqui
+    
+    # Tratamento de Data
+    df_full["Data de Envio"] = pd.to_datetime(
+        df_full["Data de Envio"], 
+        format="%d/%m/%Y", 
+        errors="coerce"
+    ).dt.normalize() 
+
+    # 2. Normaliza as datas do filtro para garantir que a comparação seja exata
+    inicio = pd.Timestamp(dt_inicio).normalize()
+    fim    = pd.Timestamp(dt_fim).normalize()
+    
+    # 3. Aplica o filtro usando as datas sem "lixo" de horário
+    mask = (df_full["Data de Envio"] >= inicio) & (df_full["Data de Envio"] <= fim)
+    df_filtrado = df_full.loc[mask].copy()
+
+    def money_to_float(val):
+        if pd.isna(val) or val == 0 or val == "": return 0.0
+        try:
+            return float(str(val).replace("R$", "").replace(".", "").replace(",", ".").strip())
+        except: return 0.0
+
+    # Sincroniza nomes com o Frontend (gasto e vendas)
+    df_filtrado["gasto"]  = df_filtrado["Valor Gasto"].apply(money_to_float) if "Valor Gasto" in df_filtrado.columns else 0.0
+    df_filtrado["vendas"] = df_filtrado["Valor de Vendas"].apply(money_to_float) if "Valor de Vendas" in df_filtrado.columns else 0.0
+    
+    return df_filtrado.to_dict(orient="records")
 
 # ─── ENDPOINT PRINCIPAL ───────────────────────────────────────────────────────
 
@@ -298,6 +363,11 @@ def get_dashboard_data(
 
     # ── Detecta se o filtro abrange múltiplos meses ──────────────────────────
     multiplos_meses = periodo_abrange_multiplos_meses(dt_inicio, dt_fim)
+
+    if multiplos_meses:
+        campanhas_wati = []
+    else:
+        campanhas_wati = carregar_dados_wati(dt_inicio, dt_fim)
 
     # ── Determina o mês de referência para buscar as metas ──────────────────
     # (válido somente quando o período é de um único mês)
@@ -364,6 +434,7 @@ def get_dashboard_data(
         "metas_zeradas":     multiplos_meses,   # ← novo campo
         "ranking":           ranking,
         "historico_semana":  historico_semana,
+        "campanhas_wati":    campanhas_wati,
         "periodo": {
             "inicio": dt_inicio.strftime("%d/%m/%Y"),
             "fim":    dt_fim.strftime("%d/%m/%Y"),
