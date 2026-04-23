@@ -346,7 +346,7 @@ def carregar_dados_wati(dt_inicio: datetime, dt_fim: datetime):
         except: return 0.0
 
     # Sincroniza nomes com o Frontend (gasto e vendas)
-    df_filtrado["gasto"]  = df_filtrado["Valor Gasto"].apply(money_to_float) if "Valor Gasto" in df_filtrado.columns else 0.0
+    df_filtrado["gasto"]  = df_filtrado["Valor Gasto Dia"].apply(money_to_float) if "Valor Gasto Dia" in df_filtrado.columns else 0.0
     df_filtrado["vendas"] = df_filtrado["Valor de Vendas"].apply(money_to_float) if "Valor de Vendas" in df_filtrado.columns else 0.0
     
     return df_filtrado.to_dict(orient="records")
