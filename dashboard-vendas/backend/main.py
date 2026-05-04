@@ -41,6 +41,7 @@ def login(dados: LoginRequest):
 # ─── CONFIGURAÇÕES ────────────────────────────────────────────────────────────
 # Abas de vendas — chave no formato "MM/YYYY"
 TABELAS_GIDS = {
+    "05/2026": "1515857021",
     "04/2026": "1639507081",
     "03/2026": "440786248",
     "02/2026": "336354424",
@@ -49,6 +50,7 @@ TABELAS_GIDS = {
 }
 
 WATI_GIDS = {
+    "05/2026": "469643553",
     "04/2026": "1818842645", # Aba ABRIL
     "03/2026": "0", # Pegue o GID da aba MARÇO na URL
     # Adicione os próximos meses conforme criar as abas
@@ -339,17 +341,43 @@ def carregar_dados_wati(dt_inicio: datetime, dt_fim: datetime):
     mask = (df_full["Data de Envio"] >= inicio) & (df_full["Data de Envio"] <= fim)
     df_filtrado = df_full.loc[mask].copy()
 
+    # Função interna para limpar moeda
     def money_to_float(val):
         if pd.isna(val) or val == 0 or val == "": return 0.0
         try:
             return float(str(val).replace("R$", "").replace(".", "").replace(",", ".").strip())
         except: return 0.0
 
-    # Sincroniza nomes com o Frontend (gasto e vendas)
-    df_filtrado["gasto"]  = df_filtrado["Valor Gasto Dia"].apply(money_to_float) if "Valor Gasto Dia" in df_filtrado.columns else 0.0
-    df_filtrado["vendas"] = df_filtrado["Valor de Vendas"].apply(money_to_float) if "Valor de Vendas" in df_filtrado.columns else 0.0
+    # 1. MAPEAMENTO SEGURO DE COLUNAS
+    # Verificamos qual nome você usou em cada mês (Maio usa "Valor Gasto Dia")
+    col_gasto = "Valor Gasto Dia" if "Valor Gasto Dia" in df_filtrado.columns else "Valor Gasto"
     
-    return df_filtrado.to_dict(orient="records")
+    # 2. CRIAÇÃO DAS COLUNAS QUE O FRONTEND PRECISA
+    df_filtrado["gasto"]  = df_filtrado[col_gasto].apply(money_to_float) if col_gasto in df_filtrado.columns else 0.0
+    df_filtrado["vendas"] = df_filtrado["Valor de Vendas"].apply(money_to_float) if "Valor de Vendas" in df_filtrado.columns else 0.0
+
+    # 3. FILTRO DE LIMPEZA (O SEGREDO PARA MATAR O ERROR 500)
+    # Selecionamos APENAS as colunas que o Dashboard realmente usa. 
+    # Isso ignora qualquer 'nan' que esteja em outras colunas da planilha
+    colunas_essenciais = ["Nome da Campanha", "Data de Envio", "gasto", "vendas"]
+    
+    # Garantimos que só enviamos o que existe e limpamos qualquer nulo restante com .fillna(0)
+    df_final = df_filtrado[colunas_essenciais].copy()
+
+    # Limpa NaN de colunas numéricas
+    df_final["gasto"]  = df_final["gasto"].fillna(0.0)
+    df_final["vendas"] = df_final["vendas"].fillna(0.0)
+
+    # Limpa NaN da coluna de texto
+    df_final["Nome da Campanha"] = df_final["Nome da Campanha"].fillna("")
+
+    # Remove linhas onde a data é NaT (linhas inválidas/cabeçalhos duplicados)
+    df_final = df_final.dropna(subset=["Data de Envio"])
+
+    # Converte a data para string para evitar problemas de serialização JSON
+    df_final["Data de Envio"] = df_final["Data de Envio"].dt.strftime("%Y-%m-%d")
+
+    return df_final.to_dict(orient="records")
 
 # ─── ENDPOINT PRINCIPAL ───────────────────────────────────────────────────────
 
@@ -403,13 +431,19 @@ def get_dashboard_data(
     faturamento_total = 0.0
     meta_total        = 0.0
 
+    def safe_float(val, fallback=0.0):
+        """Converte qualquer valor para float limpo, sem NaN/Inf."""
+        try:
+            f = float(val)
+            if f != f or f == float("inf") or f == float("-inf"):  # checa NaN e Inf
+                return fallback
+            return f
+        except:
+            return fallback
+
     for nome in VENDEDORAS:
-        total = extrair_total_vendedora(df_filtrado, nome)
-
-        # Meta fixa do mês — zero se vendedora não estiver na planilha de metas
-        # ou se o filtro abranger múltiplos meses
-        meta_individual = metas_fixas.get(nome, 0.0)
-
+        total = safe_float(extrair_total_vendedora(df_filtrado, nome))
+        meta_individual = safe_float(metas_fixas.get(nome, 0.0))
         percentual = (total / meta_individual * 100) if meta_individual > 0 else 0.0
 
         faturamento_total += total
@@ -419,7 +453,7 @@ def get_dashboard_data(
             "nome":       nome,
             "total":      round(total, 2),
             "meta":       round(meta_individual, 2),
-            "percentual": round(percentual, 1),
+            "percentual": round(safe_float(percentual), 1),
         })
 
     ranking.sort(key=lambda x: x["total"], reverse=True)
@@ -428,8 +462,8 @@ def get_dashboard_data(
     historico_semana = calcular_historico_semana(df, dt_inicio, dt_fim)
 
     return {
-        "faturamento_geral": round(faturamento_total, 2),
-        "meta_empresa":      round(meta_total, 2),
+        "faturamento_geral": round(safe_float(faturamento_total), 2),
+        "meta_empresa":      round(safe_float(meta_total), 2),
         "melhor_vendedora":  ranking[0]["nome"] if ranking else "-",
         "metas_zeradas":     multiplos_meses,   # ← novo campo
         "ranking":           ranking,
