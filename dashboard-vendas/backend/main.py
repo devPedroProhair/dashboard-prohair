@@ -41,6 +41,7 @@ def login(dados: LoginRequest):
 # ─── CONFIGURAÇÕES ────────────────────────────────────────────────────────────
 # Abas de vendas — chave no formato "MM/YYYY"
 TABELAS_GIDS = {
+    "06/2026": "1762425737",
     "05/2026": "1515857021",
     "04/2026": "1639507081",
     "03/2026": "440786248",
@@ -50,6 +51,7 @@ TABELAS_GIDS = {
 }
 
 WATI_GIDS = {
+    "06/2026": "441577698",
     "05/2026": "469643553",
     "04/2026": "1818842645", # Aba ABRIL
     "03/2026": "0", # Pegue o GID da aba MARÇO na URL
